@@ -70,6 +70,13 @@ const el = (tag, html = "") => {
   node.innerHTML = html;
   return node;
 };
+const escapeHtml = (value) =>
+  String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 
 function renderNav() {
   const main = $("#main-nav");
@@ -273,6 +280,7 @@ function returnWarpToStore(loomId) {
 function renderLoomsTable() {
   const root = $("#krosna");
   const query = (root.querySelector("#loom-search")?.value || "").toLowerCase();
+  const safeQuery = escapeHtml(query);
   const status = root.querySelector("#loom-status-filter")?.value || "ALL";
   const filtered = state.looms.filter((l) => {
     const inQuery = [l.number, l.type, l.model, l.status, l.article].join(" ").toLowerCase().includes(query);
@@ -281,7 +289,7 @@ function renderLoomsTable() {
 
   root.innerHTML = `
     <div class="controls">
-      <input id="loom-search" placeholder="Szukaj krosna" value="${query}" />
+      <input id="loom-search" placeholder="Szukaj krosna" value="${safeQuery}" />
       <select id="loom-status-filter">
         <option value="ALL">Wszystkie statusy</option>
         ${["PRACUJE", "ZATRZYMANE", "AWARIA", "ZMIANA OSNOWY", "ZMIANA ARTYKUŁU", "ROZEBRANE"]
@@ -359,9 +367,11 @@ function moveToThreading(warpId) {
 function renderWarps() {
   const root = $("#osnowy");
   const query = (root.querySelector("#warp-search")?.value || "").toLowerCase();
+  const safeQuery = escapeHtml(query);
   const status = root.querySelector("#warp-status-filter")?.value || "ALL";
   const sort = root.querySelector("#warp-sort")?.value || "number";
   const historyQuery = root.querySelector("#history-search")?.value || "";
+  const safeHistoryQuery = escapeHtml(historyQuery);
 
   let filtered = state.warps.filter((w) => {
     const match = [w.number, w.name, w.rollerType, w.status].join(" ").toLowerCase().includes(query);
@@ -378,7 +388,7 @@ function renderWarps() {
 
   root.innerHTML = `
     <div class="controls">
-      <input id="warp-search" placeholder="Szukaj osnowy" value="${query}" />
+      <input id="warp-search" placeholder="Szukaj osnowy" value="${safeQuery}" />
       <select id="warp-status-filter">
         <option value="ALL">Wszystkie statusy</option>
         ${["W MAGAZYNIE", "W KOLEJCE", "W PRZYGOTOWANIU", "PRZYGOTOWANA", "NA KROŚNIE", "ZDJĘTA Z KROSNA", "ZUŻYTA"]
@@ -403,7 +413,7 @@ function renderWarps() {
       </tbody>
     </table>
     <h3>Historia osnów</h3>
-    <div class="controls"><input id="history-search" placeholder="Szukaj historii osnów" value="${historyQuery}" /></div>
+    <div class="controls"><input id="history-search" placeholder="Szukaj historii osnów" value="${safeHistoryQuery}" /></div>
     <table>
       <thead><tr><th>Data</th><th>Osnowa</th><th>Akcja</th><th>Krosno</th></tr></thead>
       <tbody>
@@ -448,7 +458,7 @@ function renderDepartment(screenId, key, showInstall = false) {
             const nextBtn = nextStatus
               ? `<button onclick="updateDepartmentStatus('${key}', ${job.id}, '${nextStatus}')">${nextStatus}</button>`
               : "";
-            return `<tr><td>${job.title}</td><td>${job.status}</td><td>${nextBtn}${installBtn}</td></tr>`;
+            return `<tr><td>${escapeHtml(job.title)}</td><td>${escapeHtml(job.status)}</td><td>${nextBtn}${installBtn}</td></tr>`;
           })
           .join("")}
       </tbody>
@@ -456,7 +466,7 @@ function renderDepartment(screenId, key, showInstall = false) {
     <h3>Historia ukończonych</h3>
     <table>
       <thead><tr><th>Zlecenie</th><th>Status</th></tr></thead>
-      <tbody>${finished.map((job) => `<tr><td>${job.title}</td><td>${job.status}</td></tr>`).join("")}</tbody>
+      <tbody>${finished.map((job) => `<tr><td>${escapeHtml(job.title)}</td><td>${escapeHtml(job.status)}</td></tr>`).join("")}</tbody>
     </table>`;
 }
 
@@ -518,6 +528,7 @@ function installPreparedFromThreading(warpId) {
 function renderEmployees() {
   const root = $("#pracownicy");
   const q = (root.querySelector("#emp-search")?.value || "").toLowerCase();
+  const safeQ = escapeHtml(q);
   const shift = root.querySelector("#emp-shift")?.value || "ALL";
   const attendance = root.querySelector("#emp-attendance")?.value || "ALL";
 
@@ -528,7 +539,7 @@ function renderEmployees() {
 
   root.innerHTML = `
     <div class="controls">
-      <input id="emp-search" placeholder="Szukaj pracownika" value="${q}" />
+      <input id="emp-search" placeholder="Szukaj pracownika" value="${safeQ}" />
       <select id="emp-shift"><option value="ALL">Zmiana: wszystkie</option><option value="1" ${shift === "1" ? "selected" : ""}>1</option><option value="2" ${shift === "2" ? "selected" : ""}>2</option></select>
       <select id="emp-attendance">
         <option value="ALL">Obecność: wszystkie</option>
