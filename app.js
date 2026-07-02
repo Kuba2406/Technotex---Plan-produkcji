@@ -1086,7 +1086,7 @@ function updateDepartmentStatus(key, jobId, status) {
       state.globalWarpHistory.unshift({
         warpNumber: newWarpNumber,
         action: "W MAGAZYNIE",
-        loomNumber: "-",
+        loomNumber: null,
         when: nowTs()
       });
     }
