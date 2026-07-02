@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Technotex — Plan produkcji (BETA)</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-kicker">Technotex</span>
+          <h1>Plan produkcji BETA</h1>
+          <p>Demonstracyjny widok hali, krosien i przepływu osnów w nowocześniejszym wydaniu.</p>
+        </div>
+
+        <div class="sidebar-panel">
+          <div class="sidebar-panel-label">Nawigacja</div>
+          <nav id="main-nav"></nav>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <button id="mobile-menu-btn" class="mobile-only icon-btn" aria-label="Otwórz menu">☰</button>
+          <div>
+            <p class="eyebrow">Wersja demonstracyjna</p>
+            <h2 id="screen-title">Dashboard</h2>
+            <p id="screen-subtitle" class="screen-subtitle">Szybki podgląd stanu produkcji i układu hali.</p>
+          </div>
+          <div class="topbar-clock" id="topbar-clock" aria-live="off">
+            <span class="clock-time" id="clock-time">--:--:--</span>
+            <span class="clock-date" id="clock-date">--.---.----</span>
+          </div>
+        </header>
+
+        <section id="dashboard" class="screen active"></section>
+        <section id="plan-hali" class="screen"></section>
+        <section id="krosna" class="screen"></section>
+        <section id="osnowy" class="screen"></section>
+        <section id="przewlekalnia" class="screen"></section>
+        <section id="klejarnia" class="screen"></section>
+        <section id="snowalnia" class="screen"></section>
+        <section id="pracownicy" class="screen"></section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav mobile-only" id="bottom-nav"></nav>
+
+    <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
+    <aside id="loom-drawer" class="drawer hidden" aria-hidden="true">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">Krosno</p>
+          <h3>Szczegóły stanowiska</h3>
+        </div>
+        <button id="close-drawer" class="icon-btn" aria-label="Zamknij panel">✕</button>
+      </div>
+      <div id="drawer-content"></div>
+    </aside>
+
+    <script src="app.js"></script>
+  </body>
+</html>
