@@ -11,14 +11,26 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar" id="sidebar">
-        <h1>Technotex BETA</h1>
-        <nav id="main-nav"></nav>
+        <div class="sidebar-brand">
+          <span class="brand-kicker">Technotex</span>
+          <h1>Plan produkcji BETA</h1>
+          <p>Demonstracyjny widok hali, krosien i przepływu osnów w nowocześniejszym wydaniu.</p>
+        </div>
+
+        <div class="sidebar-panel">
+          <div class="sidebar-panel-label">Nawigacja</div>
+          <nav id="main-nav"></nav>
+        </div>
       </aside>
 
       <main class="content">
         <header class="topbar">
-          <button id="mobile-menu-btn" class="mobile-only">☰</button>
-          <h2 id="screen-title">Dashboard</h2>
+          <button id="mobile-menu-btn" class="mobile-only icon-btn" aria-label="Otwórz menu">☰</button>
+          <div>
+            <p class="eyebrow">Wersja demonstracyjna</p>
+            <h2 id="screen-title">Dashboard</h2>
+            <p id="screen-subtitle" class="screen-subtitle">Szybki podgląd stanu produkcji i układu hali.</p>
+          </div>
         </header>
 
         <section id="dashboard" class="screen active"></section>
@@ -34,10 +46,14 @@
 
     <nav class="bottom-nav mobile-only" id="bottom-nav"></nav>
 
+    <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
     <aside id="loom-drawer" class="drawer hidden" aria-hidden="true">
       <div class="drawer-header">
-        <h3>Szczegóły krosna</h3>
-        <button id="close-drawer">✕</button>
+        <div>
+          <p class="eyebrow">Krosno</p>
+          <h3>Szczegóły stanowiska</h3>
+        </div>
+        <button id="close-drawer" class="icon-btn" aria-label="Zamknij panel">✕</button>
       </div>
       <div id="drawer-content"></div>
     </aside>

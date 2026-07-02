@@ -18,7 +18,10 @@ Następnie otwórz:
 ## Zakres BETA
 
 - Mockowe dane i lokalny stan (bez backendu)
-- Plan hali z bloczkami krosien, kolorami modelu i diodą statusu
+- Nowocześniejszy UI z odświeżonym sidebar, kartami, tabelami, badge'ami i drawerem
+- Plan hali w formie przestrzeni produkcyjnej z sektorami, alejami i rozmieszczeniem krosien
+- Tryb „Edytuj układ” do przeciągania krosien po hali
+- Lokalny zapis ustawienia hali w `localStorage` oraz reset układu do domyślnego
 - Drawer szczegółów krosna z akcjami osnów i historią
 - Lista krosien z wyszukiwaniem i filtrem
 - Osnowy z filtrowaniem/sortowaniem/wyszukiwaniem + historia
