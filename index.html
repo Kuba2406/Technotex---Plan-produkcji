@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Technotex — Plan produkcji (BETA)</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <h1>Technotex BETA</h1>
+        <nav id="main-nav"></nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <button id="mobile-menu-btn" class="mobile-only">☰</button>
+          <h2 id="screen-title">Dashboard</h2>
+        </header>
+
+        <section id="dashboard" class="screen active"></section>
+        <section id="plan-hali" class="screen"></section>
+        <section id="krosna" class="screen"></section>
+        <section id="osnowy" class="screen"></section>
+        <section id="przewlekalnia" class="screen"></section>
+        <section id="klejarnia" class="screen"></section>
+        <section id="snowalnia" class="screen"></section>
+        <section id="pracownicy" class="screen"></section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav mobile-only" id="bottom-nav"></nav>
+
+    <aside id="loom-drawer" class="drawer hidden" aria-hidden="true">
+      <div class="drawer-header">
+        <h3>Szczegóły krosna</h3>
+        <button id="close-drawer">✕</button>
+      </div>
+      <div id="drawer-content"></div>
+    </aside>
+
+    <script src="app.js"></script>
+  </body>
+</html>
