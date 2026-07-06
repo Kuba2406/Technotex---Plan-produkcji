@@ -671,13 +671,13 @@ function renderMagazyn() {
 window.sendToPrzewekalnia = function(id) {
   const o = getOsnowa(id); if (!o) return;
   confirm(
-    `Wysłać osnowę ${o.numer} do przewlekami?`,
+    `Wysłać osnowę ${o.numer} do przewlekalni?`,
     () => {
       o.lokalizacja = 'przewlekalnia';
       o.statusPrzerobki = 'w_kolejce';
       closeModal(); renderView();
     },
-    `Osnowa trafi do kolejki w przewlekami.`
+    `Osnowa trafi do kolejki w przewlekalni.`
   );
 };
 
@@ -778,7 +778,7 @@ function renderPrzewekalnia() {
         }).join('')}
       </div>
     </div>
-    ${sectionHtml || '<div class="empty-state">Brak osnów w przewlekami</div>'}`;
+    ${sectionHtml || '<div class="empty-state">Brak osnów w przewlekalni</div>'}`;
 }
 
 window.przewZmienStatus = function(id, newStatus) {
@@ -1110,7 +1110,7 @@ window.zdejmijOsnoweConfirm = function(krosnoid) {
 window.zalozOsnowe = function(krosnoid) {
   const available = state.osnowy.filter(o => o.lokalizacja === 'magazyn' && o.statusPrzew === 'przewleczona');
   if (!available.length) {
-    alert('Brak przewleczonych osnów w magazynie. Wyślij osnowę do przewlekami lub przypisz z magazynu.');
+    alert('Brak przewleczonych osnów w magazynie. Wyślij osnowę do przewlekalni lub przypisz z magazynu.');
     return;
   }
   const opts = available.map(o => {
