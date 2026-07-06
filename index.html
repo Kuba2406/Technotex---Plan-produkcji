@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technotex · Plan produkcji</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Frontend-only prototype</p>
+        <h1>Technotex · Plan produkcji</h1>
+      </div>
+      <nav class="main-nav" aria-label="Nawigacja główna">
+        <button type="button" class="nav-button is-active" data-view="dashboard">Start</button>
+        <button type="button" class="nav-button" data-view="orders">Zlecenia produkcyjne</button>
+        <button type="button" class="nav-button" data-view="articles">Artykuły</button>
+        <button type="button" class="nav-button" data-view="workers">Pracownicy</button>
+        <button type="button" class="nav-button" data-view="weaving">Tkalnia</button>
+        <button type="button" class="nav-button" data-view="settings">Ustawienia</button>
+      </nav>
+    </header>
+
+    <main id="app" class="view-root" aria-live="polite"></main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
