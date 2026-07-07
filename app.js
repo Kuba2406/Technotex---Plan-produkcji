@@ -302,6 +302,8 @@ function stripUnsafeModalMarkup(html) {
   return String(html || '')
     .replace(/<\s*(script|iframe|object|embed)\b[\s\S]*?(?:<\/\s*\1\s*>|\/>)/gi, '')
     .replace(/<\s*link\b[^>]*rel\s*=\s*["']import["'][^>]*>/gi, '')
+    // Keep inline onclick handlers because modal actions are whitelisted and re-routed
+    // through runSafeInlineCall(); strip all other event attributes from modal HTML.
     .replace(/\s(on(?!click\b)\w+)\s*=\s*(['"])[\s\S]*?\2/gi, '')
     .replace(/\s(href|src)\s*=\s*(['"])\s*(?:javascript|data|vbscript):[\s\S]*?\2/gi, '');
 }
