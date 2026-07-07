@@ -150,17 +150,29 @@ const modalOverlay = qs('#modal-overlay');
 const modalContent = qs('#modal-content');
 
 function sanitizeModalHtml(html) {
-  return String(html || '')
-    .replace(/<\s*(script|iframe|object|embed|link)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '')
-    .replace(/<\s*(script|iframe|object|embed|link)[^>]*\/?\s*>/gi, '')
-    .replace(/\son[a-z]+\s*=\s*(".*?"|'.*?'|[^\s>]+)/gi, '')
-    .replace(/\s(href|src)\s*=\s*(['"])\s*(javascript|data|vbscript):[\s\S]*?\2/gi, '');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(String(html || ''), 'text/html');
+  doc.body.querySelectorAll('script, iframe, object, embed, link[rel="import"]').forEach(node => node.remove());
+  doc.body.querySelectorAll('*').forEach((el) => {
+    [...el.attributes].forEach((attr) => {
+      const name = attr.name.toLowerCase();
+      const value = String(attr.value || '').trim().toLowerCase();
+      if (name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+        return;
+      }
+      if ((name === 'href' || name === 'src') && /^(javascript|data|vbscript):/.test(value)) {
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+  return doc.body;
 }
 
 function showModal(html, wide) {
-  const safeHtml = sanitizeModalHtml(`<div class="modal${wide ? ' modal-wide' : ''}">${html}</div>`);
-  const fragment = document.createRange().createContextualFragment(safeHtml);
-  modalContent.replaceChildren(fragment);
+  const safeBody = sanitizeModalHtml(`<div class="modal${wide ? ' modal-wide' : ''}">${html}</div>`);
+  const nodes = [...safeBody.childNodes].map(node => document.importNode(node, true));
+  modalContent.replaceChildren(...nodes);
   modalOverlay.classList.remove('hidden');
 }
 
@@ -2268,15 +2280,15 @@ window.addNieobecnosc = function(pracownikId) {
 
 window.saveNieobecnosc = function() {
   const od = qs('#fn-od').value;
-  const doDate = qs('#fn-do').value;
-  if (!od || !doDate) { alert('Podaj daty.'); return; }
-  if (od > doDate) { alert('Data "od" musi być przed datą "do".'); return; }
+  const endDate = qs('#fn-do').value;
+  if (!od || !endDate) { alert('Podaj daty.'); return; }
+  if (new Date(od) > new Date(endDate)) { alert('Data "od" musi być przed datą "do".'); return; }
   const id = state.nextId.nieobecnosc++;
   state.nieobecnosci.push({
     id,
     pracownikId: parseInt(qs('#fn-prac').value),
     typ: qs('#fn-typ').value,
-    od, do: doDate,
+    od, do: endDate,
   });
   closeModal(); renderView();
 };
