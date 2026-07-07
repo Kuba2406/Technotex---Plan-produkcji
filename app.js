@@ -85,7 +85,7 @@ function getWidoczneZlecenia() {
 }
 
 const undoStack = [];
-const UNDO_LIMIT = 60; // practical cap for frontend-only prototype memory usage
+const UNDO_LIMIT = 60; // enough to undo several batch/layout steps without growing snapshots indefinitely
 let draggedLoomId = null;
 let suppressLoomClick = false;
 const UNDO_KEYS = [
@@ -200,16 +200,34 @@ function parseSafeInlineArgs(raw) {
   });
 }
 
+function isSafeInlineCall(expression) {
+  const input = String(expression || '').trim();
+  const openIndex = input.indexOf('(');
+  if (openIndex <= 0 || !input.endsWith(')')) return false;
+  const fnName = input.slice(0, openIndex).trim();
+  if (!/^[A-Za-z_$][\w$]*$/.test(fnName)) return false;
+  return parseSafeInlineArgs(input.slice(openIndex + 1, -1)) !== null;
+}
+
 function runSafeInlineCall(expression) {
-  const match = String(expression || '').trim().match(/^([A-Za-z_$][\w$]*)\((.*)\)$/);
-  if (!match) return false;
-  const [, fnName, rawArgs] = match;
+  const input = String(expression || '').trim();
+  const openIndex = input.indexOf('(');
+  if (openIndex <= 0 || !input.endsWith(')')) return false;
+  const fnName = input.slice(0, openIndex).trim();
   const fn = window[fnName];
   if (typeof fn !== 'function') return false;
-  const args = parseSafeInlineArgs(rawArgs);
+  const args = parseSafeInlineArgs(input.slice(openIndex + 1, -1));
   if (args === null) return false;
   fn(...args);
   return true;
+}
+
+function stripUnsafeModalMarkup(html) {
+  return String(html || '')
+    .replace(/<\s*(script|iframe|object|embed)\b[\s\S]*?(?:<\/\s*\1\s*>|\/>)/gi, '')
+    .replace(/<\s*link\b[^>]*rel\s*=\s*["']import["'][^>]*>/gi, '')
+    .replace(/\s(on(?!click\b)\w+)\s*=\s*(['"])[\s\S]*?\2/gi, '')
+    .replace(/\s(href|src)\s*=\s*(['"])\s*(?:javascript|data|vbscript):[\s\S]*?\2/gi, '');
 }
 
 // ============================================================
@@ -220,7 +238,7 @@ const modalContent = qs('#modal-content');
 
 function sanitizeModalHtml(html) {
   const parser = new DOMParser();
-  const doc = parser.parseFromString(String(html || ''), 'text/html');
+  const doc = parser.parseFromString(stripUnsafeModalMarkup(html), 'text/html');
   doc.body.querySelectorAll('script, iframe, object, embed, link[rel="import"]').forEach(node => node.remove());
   doc.body.querySelectorAll('*').forEach((el) => {
     [...el.attributes].forEach((attr) => {
@@ -228,7 +246,7 @@ function sanitizeModalHtml(html) {
       const value = String(attr.value || '').trim().toLowerCase();
       if (name === 'onclick') {
         const action = String(attr.value || '').trim();
-        if (/^[A-Za-z_$][\w$]*\((?:[^()]|'[^']*'|"[^"]*")*\)$/.test(action)) {
+        if (isSafeInlineCall(action)) {
           el.setAttribute('data-onclick', action);
         }
         el.removeAttribute(attr.name);
@@ -2564,15 +2582,15 @@ window.addNieobecnosc = function(pracownikId) {
 
 window.saveNieobecnosc = function() {
   const od = qs('#fn-od').value;
-  const endDate = qs('#fn-do').value;
-  if (!od || !endDate) { alert('Podaj daty.'); return; }
-  if (new Date(od) > new Date(endDate)) { alert('Data "od" musi być przed datą "do".'); return; }
+  const doDate = qs('#fn-do').value;
+  if (!od || !doDate) { alert('Podaj daty.'); return; }
+  if (new Date(od) > new Date(doDate)) { alert('Data rozpoczęcia musi być przed datą zakończenia.'); return; }
   const id = state.nextId.nieobecnosc++;
   state.nieobecnosci.push({
     id,
     pracownikId: parseInt(qs('#fn-prac').value),
     typ: qs('#fn-typ').value,
-    od, do: endDate,
+    od, do: doDate,
   });
   closeModal(); renderView();
 };

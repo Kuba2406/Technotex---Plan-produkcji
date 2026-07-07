@@ -57,7 +57,7 @@ const OSNOWY_INIT = [
   { id: 20, numer: 'O-020/2026', artId: 2, metry: 740,  statusPrzew: 'przewleczona',    lokalizacja: 'krosno',       krosnoid: 28, statusPrzerobki: null },
   // In magazyn osnów
   { id: 21, numer: 'O-021/2026', artId: 3, metry: 1200, statusPrzew: 'przewleczona',    lokalizacja: 'magazyn',      krosnoid: null, statusPrzerobki: null },
-  { id: 22, numer: 'O-022/2026', artId: 4, metry: null,  statusPrzew: 'nieprzewleczona', lokalizacja: 'magazyn',     krosnoid: null, statusPrzerobki: null },
+  { id: 22, numer: 'O-022/2026', artId: 4, metry: null,  statusPrzew: 'nieprzewleczona', lokalizacja: 'magazyn',     krosnoid: null, statusPrzerobki: null }, // długość jeszcze do pomiaru
   { id: 23, numer: 'O-023/2026', artId: 5, metry: 800,  statusPrzew: 'nieprzewleczona', lokalizacja: 'magazyn',      krosnoid: null, statusPrzerobki: null },
   { id: 24, numer: 'O-024/2026', artId: 6, metry: 650,  statusPrzew: 'przewleczona',    lokalizacja: 'magazyn',      krosnoid: null, statusPrzerobki: null },
   { id: 25, numer: 'O-025/2026', artId: 7, metry: 450,  statusPrzew: 'nieprzewleczona', lokalizacja: 'magazyn',      krosnoid: null, statusPrzerobki: null },
