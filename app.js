@@ -88,14 +88,12 @@ function getWidoczneZlecenia() {
 // ============================================================
 const modalOverlay = qs('#modal-overlay');
 const modalContent = qs('#modal-content');
+const modalHtmlPolicy = window.trustedTypes
+  ? window.trustedTypes.createPolicy('technotex-modal', { createHTML: input => input })
+  : { createHTML: input => input };
 
 function showModal(html, wide) {
-  const wrapper = document.createElement('div');
-  wrapper.className = `modal${wide ? ' modal-wide' : ''}`;
-  const range = document.createRange();
-  range.selectNode(document.body);
-  wrapper.append(range.createContextualFragment(html));
-  modalContent.replaceChildren(wrapper);
+  modalContent.innerHTML = modalHtmlPolicy.createHTML(`<div class="modal${wide ? ' modal-wide' : ''}">${html}</div>`);
   modalOverlay.classList.remove('hidden');
 }
 
@@ -762,7 +760,7 @@ function renderMagazyn() {
       <td>${przew}</td>
       <td><div class="btn-group">
         ${o.statusPrzew === 'nieprzewleczona'
-          ? `<button class="btn btn-sm btn-primary" onclick="sendToPrzewekalnia(${o.id})">→ Przewlekalnia</button>`
+          ? `<button class="btn btn-sm btn-primary" onclick="sendToPrzewlekalnia(${o.id})">→ Przewlekalnia</button>`
           : `<button class="btn btn-sm btn-success" onclick="magazynAssignToLoom(${o.id})">→ Krosno</button>`}
       </div></td>
     </tr>`;
@@ -791,7 +789,7 @@ function renderMagazyn() {
     </div>`;
 }
 
-window.sendToPrzewekalnia = function(id) {
+window.sendToPrzewlekalnia = function(id) {
   const o = getOsnowa(id); if (!o) return;
   confirm(
     `Wysłać osnowę ${o.numer} do przewlekalni?`,
@@ -806,9 +804,9 @@ window.sendToPrzewekalnia = function(id) {
 
 window.magazynAssignToLoom = function(id) {
   const o = getOsnowa(id); if (!o) return;
-  const freeLoons = state.krosna.filter(k => k.osnowId === null);
-  if (!freeLoons.length) { alert('Brak wolnych krosien.'); return; }
-  const opts = freeLoons.map(k => `<option value="${k.id}">${escHtml(k.numer)}</option>`).join('');
+  const freeLooms = state.krosna.filter(k => k.osnowId === null);
+  if (!freeLooms.length) { alert('Brak wolnych krosien.'); return; }
+  const opts = freeLooms.map(k => `<option value="${k.id}">${escHtml(k.numer)}</option>`).join('');
   showModal(`
     <button class="modal-close-btn" onclick="closeModal()">×</button>
     <h3>Przypisz osnowę ${escHtml(o.numer)} do krosna</h3>
