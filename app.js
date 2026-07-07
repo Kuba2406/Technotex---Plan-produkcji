@@ -13,7 +13,8 @@ function escHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function formatDate(d) {
@@ -1904,12 +1905,12 @@ window.openAttendance = function(zmiana) {
 
   showModal(`
     <button class="modal-close-btn" onclick="closeModal()">×</button>
-    <h3>Obecność – Zmiana ${zmiana} – ${formatDate(dateStr)}</h3>
+    <h3>Obecność – Zmiana ${zmiana} – ${escHtml(formatDate(dateStr))}</h3>
     <p class="text-muted text-sm mb-16">${workers.length} pracowników w tej zmianie</p>
     <div>${rowsHtml}</div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>
-      <button class="btn btn-primary" onclick="saveAttendance(${zmiana}, '${dateStr}')">Zapisz obecność</button>
+      <button class="btn btn-primary" onclick="saveAttendance(${zmiana}, ${JSON.stringify(dateStr)})">Zapisz obecność</button>
     </div>`, true);
 
   // Pre-populate state for auto-filled entries
@@ -2050,7 +2051,8 @@ function attachViewEvents() {
 // ============================================================
 window.addEventListener('hashchange', () => {
   const hash = window.location.hash.replace('#','');
-  if (VIEWS.includes(hash)) navigate(hash);
+  const safeHash = VIEWS.find(v => v === hash);
+  if (safeHash) navigate(safeHash);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -2062,5 +2064,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const hash = window.location.hash.replace('#','');
-  navigate(VIEWS.includes(hash) ? hash : 'tkalnia');
+  navigate(VIEWS.find(v => v === hash) || 'tkalnia');
 });
