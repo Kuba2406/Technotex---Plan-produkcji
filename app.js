@@ -34,7 +34,7 @@ function statusZleceniaHtml(s) {
 }
 
 function statusSnHtml(s) {
-  const map = { w_kolejce: ['badge-grey','W kolejce'], w_trakcie: ['badge-warning','W trakcie'], gotowe: ['badge-success','Gotowe'] };
+  const map = { w_kolejce: ['badge-grey','W kolejce'], w_trakcie: ['badge-warning','W trakcie'], gotowe: ['badge-success','Gotowe'], zarchiwizowane: ['badge-info','Zarchiwizowane'] };
   const [cls, lbl] = map[s] || ['badge-grey', s];
   return `<span class="badge ${cls}">${lbl}</span>`;
 }
@@ -85,7 +85,7 @@ function getWidoczneZlecenia() {
 }
 
 const undoStack = [];
-const UNDO_LIMIT = 60;
+const UNDO_LIMIT = 60; // practical cap for frontend-only prototype memory usage
 const UNDO_KEYS = [
   'artykuly',
   'typyKrosien',
@@ -615,7 +615,7 @@ window.saveSplitPlan = function(stage, id) {
   }
   const lengths = normalizeSplitLengths(qs('#fsp-lengths').value, count);
   if (!lengths) {
-    alert('Podaj dokładnie tyle dodatnich długości, ile wynosi liczba osnów.');
+    alert(`Podaj dokładnie ${count} dodatnich długości (liczba osnów).`);
     return;
   }
   saveUndoPoint('Podział zlecenia na osnowy');
