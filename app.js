@@ -2720,15 +2720,15 @@ window.addNieobecnosc = function(pracownikId) {
 
 window.saveNieobecnosc = function() {
   const od = qs('#fn-od').value;
-  const doDate = qs('#fn-do').value;
-  if (!od || !doDate) { alert('Podaj daty.'); return; }
-  if (new Date(od) > new Date(doDate)) { alert('Data rozpoczęcia musi być przed datą zakończenia.'); return; }
+  const endDate = qs('#fn-do').value;
+  if (!od || !endDate) { alert('Podaj daty.'); return; }
+  if (new Date(od) > new Date(endDate)) { alert('Data rozpoczęcia musi być przed datą zakończenia.'); return; }
   const id = state.nextId.nieobecnosc++;
   state.nieobecnosci.push({
     id,
     pracownikId: parseInt(qs('#fn-prac').value),
     typ: qs('#fn-typ').value,
-    od, do: doDate,
+    od, do: endDate,
   });
   closeModal(); renderView();
 };
