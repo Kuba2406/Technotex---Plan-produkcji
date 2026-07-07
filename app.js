@@ -50,6 +50,35 @@ function statusObecnosci(s) {
   return `<span class="badge ${cls}">${lbl}</span>`;
 }
 
+const PRIORYTETY = ['niski', 'standard', 'wysoki', 'krytyczny'];
+const PALETA_KOLOROW = ['#2980b9', '#27ae60', '#d4a017', '#8e44ad', '#16a085', '#2c3e50', '#c0392b', '#d35400', '#5d4037', '#0f766e'];
+
+function rozpinkaLabel(value) {
+  return value === 'tak' ? 'Tak' : 'Nie';
+}
+
+function priorytetLabel(value) {
+  if (!value) return 'Standard';
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function priorytetBadgeClass(value) {
+  return {
+    niski: 'badge-grey',
+    standard: 'badge-info',
+    wysoki: 'badge-warning',
+    krytyczny: 'badge-danger',
+  }[value] || 'badge-grey';
+}
+
+function getKierunekZlecenia(artykul) {
+  return artykul && artykul.rodzajSnucia === 'zespołowe' ? 'Klejarnia' : 'Snowalnia';
+}
+
+function getWidoczneZlecenia() {
+  return state.zlecenia.filter(z => !z.przekazaneDo);
+}
+
 // ============================================================
 // MODAL
 // ============================================================
@@ -88,7 +117,7 @@ modalOverlay.addEventListener('click', e => {
 // ============================================================
 // ROUTING
 // ============================================================
-const VIEWS = ['artykuly','zlecenia','snowalnia','klejarnia','magazyn','przewlekalnia','tkalnia','obecnosci'];
+const VIEWS = ['artykuly','zlecenia','snowalnia','klejarnia','magazyn','przewlekalnia','tkalnia','obecnosci','ustawienia'];
 
 function navigate(view) {
   if (!VIEWS.includes(view)) view = 'tkalnia';
@@ -115,6 +144,7 @@ function renderView() {
     przewlekalnia: renderPrzewekalnia,
     tkalnia:       renderTkalnia,
     obecnosci:     renderObecnosci,
+    ustawienia:    renderUstawienia,
   };
   main.innerHTML = (renders[state.currentView] || renderTkalnia)();
   attachViewEvents();
@@ -128,8 +158,10 @@ function renderArtykuly() {
     <tr>
       <td class="fw-600">${escHtml(a.nazwa)}</td>
       <td>${a.watkiNaCm}</td>
-      <td>${a.rozpinka} cm</td>
-      <td>${escHtml(a.rodzeSnucia)}</td>
+      <td>${rozpinkaLabel(a.rozpinka)}</td>
+      <td>${escHtml(a.rodzajSnucia)}</td>
+      <td>${a.szerokoscTkaniny || '—'} cm</td>
+      <td>${escHtml(a.uwagi) || '—'}</td>
       <td>
         <div class="btn-group">
           <button class="btn btn-sm btn-secondary" onclick="editArtykul(${a.id})">Edytuj</button>
@@ -156,6 +188,8 @@ function renderArtykuly() {
               <th>Wątki/cm</th>
               <th>Rozpinka</th>
               <th>Rodzaj snucia</th>
+              <th>Szerokość tkaniny</th>
+              <th>Uwagi</th>
               <th>Akcje</th>
             </tr>
           </thead>
@@ -172,14 +206,23 @@ window.addArtykul = function() {
     <div class="form-group"><label>Nazwa artykułu</label><input class="form-control" id="fa-nazwa" placeholder="np. BT 367"></div>
     <div class="grid-2">
       <div class="form-group"><label>Wątki na cm</label><input class="form-control" type="number" id="fa-watki" placeholder="np. 18"></div>
-      <div class="form-group"><label>Rozpinka (cm)</label><input class="form-control" type="number" id="fa-rozpinka" placeholder="np. 160"></div>
+      <div class="form-group"><label>Rozpinka</label>
+        <select class="form-control" id="fa-rozpinka">
+          <option value="tak">Tak</option>
+          <option value="nie">Nie</option>
+        </select>
+      </div>
     </div>
-    <div class="form-group"><label>Rodzaj snucia</label>
-      <select class="form-control" id="fa-snucie">
-        <option value="bezpośrednie">Bezpośrednie</option>
-        <option value="klejone">Klejone</option>
-      </select>
+    <div class="grid-2">
+      <div class="form-group"><label>Rodzaj snucia</label>
+        <select class="form-control" id="fa-snucie">
+          <option value="taśmowe">Taśmowe</option>
+          <option value="zespołowe">Zespołowe</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Szerokość tkaniny (cm)</label><input class="form-control" type="number" id="fa-szerokosc" placeholder="np. 150"></div>
     </div>
+    <div class="form-group"><label>Uwagi</label><textarea class="form-control" id="fa-uwagi" rows="3"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
       <button class="btn btn-primary" onclick="saveArtykul()">Zapisz</button>
@@ -193,8 +236,10 @@ window.saveArtykul = function() {
     id: state.nextId.artykul++,
     nazwa,
     watkiNaCm: parseInt(qs('#fa-watki').value) || 0,
-    rozpinka:  parseInt(qs('#fa-rozpinka').value) || 0,
-    rodzeSnucia: qs('#fa-snucie').value,
+    rozpinka: qs('#fa-rozpinka').value,
+    rodzajSnucia: qs('#fa-snucie').value,
+    szerokoscTkaniny: parseInt(qs('#fa-szerokosc').value) || 0,
+    uwagi: qs('#fa-uwagi').value.trim(),
   });
   closeModal();
   renderView();
@@ -208,14 +253,23 @@ window.editArtykul = function(id) {
     <div class="form-group"><label>Nazwa artykułu</label><input class="form-control" id="fa-nazwa" value="${escHtml(a.nazwa)}"></div>
     <div class="grid-2">
       <div class="form-group"><label>Wątki na cm</label><input class="form-control" type="number" id="fa-watki" value="${a.watkiNaCm}"></div>
-      <div class="form-group"><label>Rozpinka (cm)</label><input class="form-control" type="number" id="fa-rozpinka" value="${a.rozpinka}"></div>
+      <div class="form-group"><label>Rozpinka</label>
+        <select class="form-control" id="fa-rozpinka">
+          <option value="tak" ${a.rozpinka==='tak'?'selected':''}>Tak</option>
+          <option value="nie" ${a.rozpinka==='nie'?'selected':''}>Nie</option>
+        </select>
+      </div>
     </div>
-    <div class="form-group"><label>Rodzaj snucia</label>
-      <select class="form-control" id="fa-snucie">
-        <option value="bezpośrednie" ${a.rodzeSnucia==='bezpośrednie'?'selected':''}>Bezpośrednie</option>
-        <option value="klejone" ${a.rodzeSnucia==='klejone'?'selected':''}>Klejone</option>
-      </select>
+    <div class="grid-2">
+      <div class="form-group"><label>Rodzaj snucia</label>
+        <select class="form-control" id="fa-snucie">
+          <option value="taśmowe" ${a.rodzajSnucia==='taśmowe'?'selected':''}>Taśmowe</option>
+          <option value="zespołowe" ${a.rodzajSnucia==='zespołowe'?'selected':''}>Zespołowe</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Szerokość tkaniny (cm)</label><input class="form-control" type="number" id="fa-szerokosc" value="${a.szerokoscTkaniny || ''}"></div>
     </div>
+    <div class="form-group"><label>Uwagi</label><textarea class="form-control" id="fa-uwagi" rows="3">${escHtml(a.uwagi || '')}</textarea></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
       <button class="btn btn-primary" onclick="updateArtykul(${id})">Zapisz</button>
@@ -228,8 +282,10 @@ window.updateArtykul = function(id) {
   if (!nazwa) { alert('Podaj nazwę.'); return; }
   a.nazwa       = nazwa;
   a.watkiNaCm   = parseInt(qs('#fa-watki').value) || 0;
-  a.rozpinka    = parseInt(qs('#fa-rozpinka').value) || 0;
-  a.rodzeSnucia = qs('#fa-snucie').value;
+  a.rozpinka    = qs('#fa-rozpinka').value;
+  a.rodzajSnucia = qs('#fa-snucie').value;
+  a.szerokoscTkaniny = parseInt(qs('#fa-szerokosc').value) || 0;
+  a.uwagi = qs('#fa-uwagi').value.trim();
   closeModal();
   renderView();
 };
@@ -246,17 +302,22 @@ window.deleteArtykul = function(id) {
 // VIEW: ZLECENIA PRODUKCYJNE
 // ============================================================
 function renderZlecenia() {
-  const rows = state.zlecenia.map(z => {
+  const visibleOrders = getWidoczneZlecenia();
+  const rows = visibleOrders.map(z => {
     const art = getArtykul(z.artId);
+    const kierunek = getKierunekZlecenia(art);
     return `<tr>
       <td class="fw-600">${escHtml(z.numer)}</td>
       <td>${escHtml(art ? art.nazwa : '—')}</td>
       <td>${z.iloscM} m</td>
+      <td><span class="badge ${priorytetBadgeClass(z.priorytet)}">${priorytetLabel(z.priorytet)}</span></td>
       <td>${statusZleceniaHtml(z.status)}</td>
       <td>${formatDate(z.dataUtworzenia)}</td>
       <td>${formatDate(z.terminRealizacji)}</td>
+      <td>${escHtml(z.uwagi) || '—'}</td>
       <td>
         <div class="btn-group">
+          <button class="btn btn-sm btn-primary" onclick="przekazZlecenie(${z.id})">→ ${kierunek}</button>
           <button class="btn btn-sm btn-secondary" onclick="editZlecenie(${z.id})">Edytuj</button>
           <button class="btn btn-sm btn-danger" onclick="deleteZlecenie(${z.id})">Usuń</button>
         </div>
@@ -265,9 +326,9 @@ function renderZlecenia() {
   }).join('');
 
   const summary = {
-    nowe: state.zlecenia.filter(z => z.status === 'nowe').length,
-    w_trakcie: state.zlecenia.filter(z => z.status === 'w_trakcie').length,
-    zrealizowane: state.zlecenia.filter(z => z.status === 'zrealizowane').length,
+    nowe: visibleOrders.filter(z => z.status === 'nowe').length,
+    w_trakcie: visibleOrders.filter(z => z.status === 'w_trakcie').length,
+    zrealizowane: visibleOrders.filter(z => z.status === 'zrealizowane').length,
   };
 
   return `
@@ -284,16 +345,22 @@ function renderZlecenia() {
     </div>
     <div class="card">
       <div class="section-header">
-        <h3>Zlecenia (${state.zlecenia.length})</h3>
+        <h3>Zlecenia (${visibleOrders.length})</h3>
         <button class="btn btn-primary" onclick="addZlecenie()">+ Nowe zlecenie</button>
       </div>
       <div class="table-wrapper">
         <table class="table">
-          <thead><tr><th>Numer</th><th>Artykuł</th><th>Ilość</th><th>Status</th><th>Data utw.</th><th>Termin</th><th>Akcje</th></tr></thead>
-          <tbody>${rows}</tbody>
+          <thead><tr><th>Numer</th><th>Artykuł</th><th>Ilość</th><th>Priorytet</th><th>Status</th><th>Data utw.</th><th>Termin</th><th>Uwagi</th><th>Akcje</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="9" class="empty-state">Brak aktywnych zleceń produkcyjnych.</td></tr>'}</tbody>
         </table>
       </div>
     </div>`;
+}
+
+function syncZlecenieRoute() {
+  const art = getArtykul(parseInt(qs('#fz-art')?.value));
+  const input = qs('#fz-kierunek');
+  if (input) input.value = getKierunekZlecenia(art);
 }
 
 window.addZlecenie = function() {
@@ -306,10 +373,21 @@ window.addZlecenie = function() {
       <div class="form-group"><label>Ilość (m)</label><input class="form-control" type="number" id="fz-ilosc" placeholder="np. 3000"></div>
       <div class="form-group"><label>Termin realizacji</label><input class="form-control" type="date" id="fz-termin"></div>
     </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Priorytet</label>
+        <select class="form-control" id="fz-priorytet">
+          ${PRIORYTETY.map(p => `<option value="${p}">${priorytetLabel(p)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label>Kierunek przekazania</label><input class="form-control" id="fz-kierunek" readonly></div>
+    </div>
+    <div class="form-group"><label>Uwagi</label><textarea class="form-control" id="fz-uwagi" rows="3"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
       <button class="btn btn-primary" onclick="saveZlecenie()">Utwórz</button>
     </div>`);
+  syncZlecenieRoute();
+  qs('#fz-art')?.addEventListener('change', syncZlecenieRoute);
 };
 
 window.saveZlecenie = function() {
@@ -319,7 +397,8 @@ window.saveZlecenie = function() {
   const id = state.nextId.zlecenie++;
   const numer = 'ZL-' + String(id).padStart(3,'0') + '/' + new Date().getFullYear();
   state.zlecenia.push({ id, numer, artId, iloscM: ilosc, status: 'nowe',
-    dataUtworzenia: today(), terminRealizacji: qs('#fz-termin').value });
+    dataUtworzenia: today(), terminRealizacji: qs('#fz-termin').value,
+    priorytet: qs('#fz-priorytet').value, uwagi: qs('#fz-uwagi').value.trim(), przekazaneDo: null });
   closeModal(); renderView();
 };
 
@@ -334,6 +413,14 @@ window.editZlecenie = function(id) {
       <div class="form-group"><label>Ilość (m)</label><input class="form-control" type="number" id="fz-ilosc" value="${z.iloscM}"></div>
       <div class="form-group"><label>Termin realizacji</label><input class="form-control" type="date" id="fz-termin" value="${z.terminRealizacji||''}"></div>
     </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Priorytet</label>
+        <select class="form-control" id="fz-priorytet">
+          ${PRIORYTETY.map(p => `<option value="${p}" ${z.priorytet===p?'selected':''}>${priorytetLabel(p)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label>Kierunek przekazania</label><input class="form-control" id="fz-kierunek" value="${getKierunekZlecenia(getArtykul(z.artId))}" readonly></div>
+    </div>
     <div class="form-group"><label>Status</label>
       <select class="form-control" id="fz-status">
         <option value="nowe" ${z.status==='nowe'?'selected':''}>Nowe</option>
@@ -341,10 +428,13 @@ window.editZlecenie = function(id) {
         <option value="zrealizowane" ${z.status==='zrealizowane'?'selected':''}>Zrealizowane</option>
       </select>
     </div>
+    <div class="form-group"><label>Uwagi</label><textarea class="form-control" id="fz-uwagi" rows="3">${escHtml(z.uwagi || '')}</textarea></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
       <button class="btn btn-primary" onclick="updateZlecenie(${id})">Zapisz</button>
     </div>`);
+  syncZlecenieRoute();
+  qs('#fz-art')?.addEventListener('change', syncZlecenieRoute);
 };
 
 window.updateZlecenie = function(id) {
@@ -352,7 +442,9 @@ window.updateZlecenie = function(id) {
   z.artId   = parseInt(qs('#fz-art').value);
   z.iloscM  = parseInt(qs('#fz-ilosc').value) || z.iloscM;
   z.terminRealizacji = qs('#fz-termin').value;
+  z.priorytet = qs('#fz-priorytet').value;
   z.status  = qs('#fz-status').value;
+  z.uwagi = qs('#fz-uwagi').value.trim();
   closeModal(); renderView();
 };
 
@@ -362,6 +454,27 @@ window.deleteZlecenie = function(id) {
     state.zlecenia = state.zlecenia.filter(x => x.id !== id);
     renderView();
   });
+};
+
+window.przekazZlecenie = function(id) {
+  const z = state.zlecenia.find(x => x.id === id); if (!z || z.przekazaneDo) return;
+  const art = getArtykul(z.artId);
+  const kierunek = getKierunekZlecenia(art);
+  confirm(`Przekazać zlecenie ${z.numer} do ${kierunek}?`, () => {
+    const batch = {
+      id: state.nextId[kierunek === 'Klejarnia' ? 'klejarnia' : 'snowalnia']++,
+      numer: (kierunek === 'Klejarnia' ? 'KL-' : 'SN-') + String(kierunek === 'Klejarnia' ? state.nextId.klejarnia - 1 : state.nextId.snowalnia - 1).padStart(3, '0') + '/' + new Date().getFullYear(),
+      artId: z.artId,
+      metry: z.iloscM,
+      status: 'w_kolejce',
+      dataPlanowana: z.terminRealizacji,
+      uwagi: z.uwagi || '',
+    };
+    if (kierunek === 'Klejarnia') state.klejarnia.unshift(batch);
+    else state.snowalnia.unshift(batch);
+    z.przekazaneDo = kierunek;
+    renderView();
+  }, `Rodzaj snucia artykułu: ${art ? art.rodzajSnucia : '—'}`);
 };
 
 // ============================================================
@@ -404,11 +517,12 @@ function renderSnowalnioView() {
 }
 
 window.addSnowalnio = function() {
-  const artOpts = state.artykuly.map(a => `<option value="${a.id}">${escHtml(a.nazwa)}</option>`).join('');
+  const artOpts = state.artykuly.filter(a => a.rodzajSnucia === 'taśmowe')
+    .map(a => `<option value="${a.id}">${escHtml(a.nazwa)}</option>`).join('');
   showModal(`
     <button class="modal-close-btn" onclick="closeModal()">×</button>
     <h3>Nowe zlecenie snowalni</h3>
-    <div class="form-group"><label>Artykuł</label><select class="form-control" id="fsn-art">${artOpts}</select></div>
+    <div class="form-group"><label>Artykuł (taśmowe)</label><select class="form-control" id="fsn-art">${artOpts || '<option disabled>Brak artykułów taśmowych</option>'}</select></div>
     <div class="grid-2">
       <div class="form-group"><label>Metry</label><input class="form-control" type="number" id="fsn-metry" placeholder="np. 1200"></div>
       <div class="form-group"><label>Data planowana</label><input class="form-control" type="date" id="fsn-data"></div>
@@ -532,12 +646,12 @@ function renderKlejarnia() {
 }
 
 window.addKlejarnia = function() {
-  const artOpts = state.artykuly.filter(a => a.rodzeSnucia === 'klejone')
+  const artOpts = state.artykuly.filter(a => a.rodzajSnucia === 'zespołowe')
     .map(a => `<option value="${a.id}">${escHtml(a.nazwa)}</option>`).join('');
   showModal(`
     <button class="modal-close-btn" onclick="closeModal()">×</button>
     <h3>Nowe zlecenie klejenia</h3>
-    <div class="form-group"><label>Artykuł (klejone)</label><select class="form-control" id="fkl-art">${artOpts || '<option disabled>Brak artykułów klejonych</option>'}</select></div>
+    <div class="form-group"><label>Artykuł (zespołowe)</label><select class="form-control" id="fkl-art">${artOpts || '<option disabled>Brak artykułów zespołowych</option>'}</select></div>
     <div class="grid-2">
       <div class="form-group"><label>Metry</label><input class="form-control" type="number" id="fkl-metry"></div>
       <div class="form-group"><label>Data planowana</label><input class="form-control" type="date" id="fkl-data"></div>
@@ -886,7 +1000,7 @@ function renderLoomBlock(k) {
 function renderTkalnia() {
   const loomHtml = state.krosna.map(k => renderLoomBlock(k)).join('');
 
-  const legendHtml = TYPY_KROSIEN.map(t => `
+  const legendHtml = state.typyKrosien.map(t => `
     <div class="legend-item">
       <div class="legend-color" style="background:${t.kolor}"></div>
       <span>${escHtml(t.nazwa)}</span>
@@ -915,7 +1029,7 @@ function renderTkalnia() {
   return `
     <div class="view-header">
       <h2>Tkalnia – Plan hali</h2>
-      <p>39 krosien • kliknij krosno aby zobaczyć szczegóły</p>
+      <p>${state.krosna.length} krosien • kliknij krosno aby zobaczyć szczegóły</p>
     </div>
     <div class="card" style="padding:14px 20px;margin-bottom:12px">
       <div class="flex gap-12" style="flex-wrap:wrap">
@@ -924,6 +1038,9 @@ function renderTkalnia() {
         <div class="info-item"><div class="lbl">Zatrzymane</div><div class="val" style="color:var(--warning);font-size:1.3rem">${counts.zatrzymane}</div></div>
         <div class="info-item"><div class="lbl">Wiązanie</div><div class="val" style="color:var(--info);font-size:1.3rem">${counts.wiazanie}</div></div>
         <div class="info-item"><div class="lbl">Brak statusu</div><div class="val" style="color:var(--grey);font-size:1.3rem">${counts.brak}</div></div>
+      </div>
+      <div class="btn-group mt-12">
+        <button class="btn btn-primary" onclick="addKrosno()">+ Dodaj krosno</button>
       </div>
     </div>
     <div class="card">
@@ -984,6 +1101,7 @@ function openLoomDetail(id) {
       <div class="flex gap-8 items-center">
         <select class="form-control" id="kdetail-status" style="max-width:180px">${statusOpts}</select>
         <button class="btn btn-sm btn-primary" onclick="saveKrosnoStatus(${k.id})">Zapisz</button>
+        <button class="btn btn-sm btn-secondary" onclick="editKrosno(${k.id})">Edytuj krosno</button>
       </div>
     </div>
 
@@ -1015,7 +1133,10 @@ function openLoomDetail(id) {
         <div class="info-grid">
           <div class="info-item"><div class="lbl">Artykuł</div><div class="val">${escHtml(art.nazwa)}</div></div>
           <div class="info-item"><div class="lbl">Wątki/cm</div><div class="val">${art.watkiNaCm}</div></div>
-          <div class="info-item"><div class="lbl">Rozpinka</div><div class="val">${art.rozpinka} cm</div></div>
+          <div class="info-item"><div class="lbl">Rozpinka</div><div class="val">${rozpinkaLabel(art.rozpinka)}</div></div>
+          <div class="info-item"><div class="lbl">Rodzaj snucia</div><div class="val">${escHtml(art.rodzajSnucia)}</div></div>
+          <div class="info-item"><div class="lbl">Szerokość tkaniny</div><div class="val">${art.szerokoscTkaniny || '—'} cm</div></div>
+          <div class="info-item"><div class="lbl">Uwagi</div><div class="val">${escHtml(art.uwagi) || '—'}</div></div>
           ${isOverride ? `<div class="info-item"><div class="lbl">Źródło</div><div class="val"><span class="badge badge-purple">Ręczna zmiana</span></div></div>` : ''}
         </div>
         <div class="btn-group mt-8">
@@ -1197,6 +1318,200 @@ window.resetArtykul = function(krosnoid) {
   );
 };
 
+function renderUstawienia() {
+  const rows = state.typyKrosien.map(t => `
+    <tr>
+      <td class="fw-600">${escHtml(t.nazwa)}</td>
+      <td><span class="color-chip" style="background:${t.kolor}"></span> ${escHtml(t.kolor)}</td>
+      <td>
+        <div class="btn-group">
+          <button class="btn btn-sm btn-secondary" onclick="editTypKrosna(${t.id})">Edytuj</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTypKrosna(${t.id})">Usuń</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  return `
+    <div class="view-header">
+      <h2>Ustawienia</h2>
+      <p>Zachowane ustawienia prototypu z minimalnym rozszerzeniem o typy krosien.</p>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" type="button">Typy krosien</button>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <h3>Typy krosien (${state.typyKrosien.length})</h3>
+        <button class="btn btn-primary" onclick="addTypKrosna()">+ Dodaj typ</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead><tr><th>Nazwa</th><th>Kolor</th><th>Akcje</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function getTypyKrosienOptions(selectedId) {
+  return state.typyKrosien.map(t => `<option value="${t.id}" ${t.id===selectedId?'selected':''}>${escHtml(t.nazwa)}</option>`).join('');
+}
+
+function getKoloryOptions(selectedColor) {
+  return PALETA_KOLOROW.map(kolor => `<option value="${kolor}" ${kolor===selectedColor?'selected':''}>${kolor}</option>`).join('');
+}
+
+window.addTypKrosna = function() {
+  showModal(`
+    <button class="modal-close-btn" onclick="closeModal()">×</button>
+    <h3>Nowy typ krosna</h3>
+    <div class="form-group"><label>Nazwa</label><input class="form-control" id="ftk-nazwa"></div>
+    <div class="form-group"><label>Kolor z palety</label><select class="form-control" id="ftk-kolor">${getKoloryOptions(PALETA_KOLOROW[0])}</select></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveTypKrosna()">Zapisz</button>
+    </div>`);
+};
+
+window.saveTypKrosna = function() {
+  const nazwa = qs('#ftk-nazwa').value.trim();
+  if (!nazwa) { alert('Podaj nazwę typu krosna.'); return; }
+  state.typyKrosien.push({ id: state.nextId.typKrosna++, nazwa, kolor: qs('#ftk-kolor').value });
+  closeModal();
+  renderView();
+};
+
+window.editTypKrosna = function(id) {
+  const typ = getLoomType(id); if (!typ) return;
+  showModal(`
+    <button class="modal-close-btn" onclick="closeModal()">×</button>
+    <h3>Edytuj typ krosna</h3>
+    <div class="form-group"><label>Nazwa</label><input class="form-control" id="ftk-nazwa" value="${escHtml(typ.nazwa)}"></div>
+    <div class="form-group"><label>Kolor z palety</label><select class="form-control" id="ftk-kolor">${getKoloryOptions(typ.kolor)}</select></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="updateTypKrosna(${id})">Zapisz</button>
+    </div>`);
+};
+
+window.updateTypKrosna = function(id) {
+  const typ = getLoomType(id); if (!typ) return;
+  const nazwa = qs('#ftk-nazwa').value.trim();
+  if (!nazwa) { alert('Podaj nazwę typu krosna.'); return; }
+  typ.nazwa = nazwa;
+  typ.kolor = qs('#ftk-kolor').value;
+  closeModal();
+  renderView();
+};
+
+window.deleteTypKrosna = function(id) {
+  const typ = getLoomType(id); if (!typ) return;
+  if (state.krosna.some(k => k.typId === id)) {
+    alert('Nie można usunąć typu przypisanego do krosna.');
+    return;
+  }
+  confirm(`Usunąć typ krosna "${typ.nazwa}"?`, () => {
+    state.typyKrosien = state.typyKrosien.filter(t => t.id !== id);
+    renderView();
+  });
+};
+
+window.addKrosno = function() {
+  showModal(`
+    <button class="modal-close-btn" onclick="closeModal()">×</button>
+    <h3>Nowe krosno</h3>
+    <div class="grid-2">
+      <div class="form-group"><label>Numer</label><input class="form-control" id="fk-numer" placeholder="np. K40"></div>
+      <div class="form-group"><label>Typ krosna</label><select class="form-control" id="fk-typ">${getTypyKrosienOptions(state.typyKrosien[0]?.id)}</select></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Rodzaj</label>
+        <select class="form-control" id="fk-rodzaj">
+          <option value="pneumatyk">Pneumatyk</option>
+          <option value="rapier">Rapier</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Szerokość (cm)</label><input class="form-control" type="number" id="fk-szerokosc" value="180"></div>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select class="form-control" id="fk-status">
+        <option value="pracuje">Pracuje</option>
+        <option value="awaria">Awaria</option>
+        <option value="zatrzymane">Zatrzymane</option>
+        <option value="wiazanie">Wiązanie</option>
+        <option value="brak">Brak statusu</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveKrosno()">Zapisz</button>
+    </div>`);
+};
+
+window.saveKrosno = function() {
+  const numer = qs('#fk-numer').value.trim();
+  if (!numer) { alert('Podaj numer krosna.'); return; }
+  state.krosna.push({
+    id: state.nextId.krosno++,
+    numer,
+    typId: parseInt(qs('#fk-typ').value),
+    rodzaj: qs('#fk-rodzaj').value,
+    szerokoscCm: parseInt(qs('#fk-szerokosc').value) || 180,
+    status: qs('#fk-status').value,
+    osnowId: null,
+    artIdOverride: null,
+  });
+  closeModal();
+  renderView();
+};
+
+window.editKrosno = function(id) {
+  const k = getKrosno(id); if (!k) return;
+  showModal(`
+    <button class="modal-close-btn" onclick="closeModal()">×</button>
+    <h3>Edytuj krosno ${escHtml(k.numer)}</h3>
+    <div class="grid-2">
+      <div class="form-group"><label>Numer</label><input class="form-control" id="fk-numer" value="${escHtml(k.numer)}"></div>
+      <div class="form-group"><label>Typ krosna</label><select class="form-control" id="fk-typ">${getTypyKrosienOptions(k.typId)}</select></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Rodzaj</label>
+        <select class="form-control" id="fk-rodzaj">
+          <option value="pneumatyk" ${k.rodzaj==='pneumatyk'?'selected':''}>Pneumatyk</option>
+          <option value="rapier" ${k.rodzaj==='rapier'?'selected':''}>Rapier</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Szerokość (cm)</label><input class="form-control" type="number" id="fk-szerokosc" value="${k.szerokoscCm}"></div>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select class="form-control" id="fk-status">
+        <option value="pracuje" ${k.status==='pracuje'?'selected':''}>Pracuje</option>
+        <option value="awaria" ${k.status==='awaria'?'selected':''}>Awaria</option>
+        <option value="zatrzymane" ${k.status==='zatrzymane'?'selected':''}>Zatrzymane</option>
+        <option value="wiazanie" ${k.status==='wiazanie'?'selected':''}>Wiązanie</option>
+        <option value="brak" ${k.status==='brak'?'selected':''}>Brak statusu</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+      <button class="btn btn-primary" onclick="updateKrosno(${id})">Zapisz</button>
+    </div>`);
+};
+
+window.updateKrosno = function(id) {
+  const k = getKrosno(id); if (!k) return;
+  const numer = qs('#fk-numer').value.trim();
+  if (!numer) { alert('Podaj numer krosna.'); return; }
+  k.numer = numer;
+  k.typId = parseInt(qs('#fk-typ').value);
+  k.rodzaj = qs('#fk-rodzaj').value;
+  k.szerokoscCm = parseInt(qs('#fk-szerokosc').value) || k.szerokoscCm;
+  k.status = qs('#fk-status').value;
+  closeModal();
+  renderView();
+  openLoomDetail(id);
+};
+
 // ============================================================
 // VIEW: OBECNOŚCI
 // ============================================================
@@ -1337,10 +1652,51 @@ window.deletePracownik = function(id) {
   });
 };
 
+function getPracownikStats(id) {
+  const stats = {
+    przepracowaneDni: 0,
+    dniChorobowe: 0,
+    dniUrlopu: 0,
+    dniNieobecne: 0,
+    tkalnia: 0,
+    snowalnia: 0,
+    klejarnia: 0,
+    przewlekalnia: 0,
+    zmiana1: 0,
+    zmiana2: 0,
+  };
+  const seenDays = new Set();
+
+  for (const [key, records] of Object.entries(state.obecnosci)) {
+    const rec = records.find(r => r.pracownikId === id);
+    if (!rec) continue;
+    const [date, zmiana] = key.split('_');
+    const dayKey = `${date}:${rec.status}`;
+    if (!seenDays.has(dayKey)) {
+      if (rec.status === 'obecny') stats.przepracowaneDni += 1;
+      if (rec.status === 'chory') stats.dniChorobowe += 1;
+      if (rec.status === 'urlop') stats.dniUrlopu += 1;
+      if (rec.status === 'nieobecny') stats.dniNieobecne += 1;
+      seenDays.add(dayKey);
+    }
+    if (rec.status === 'obecny') {
+      if (rec.stanowisko === 'tkalnia') stats.tkalnia += 1;
+      if (rec.stanowisko === 'snowalnia') stats.snowalnia += 1;
+      if (rec.stanowisko === 'klejarnia') stats.klejarnia += 1;
+      if (rec.stanowisko === 'przewlekalnia') stats.przewlekalnia += 1;
+      if (zmiana === '1') stats.zmiana1 += 1;
+      if (zmiana === '2') stats.zmiana2 += 1;
+    }
+  }
+
+  return stats;
+}
+
 window.openWorkerDetail = function(id) {
   const p = getPracownik(id); if (!p) return;
   const zmiana = state.zmianyTygodniowe[id] || '—';
   const nieo = state.nieobecnosci.filter(n => n.pracownikId === id);
+  const stats = getPracownikStats(id);
 
   // Collect attendance history
   const attHistory = [];
@@ -1372,12 +1728,33 @@ window.openWorkerDetail = function(id) {
         </div>`).join('')
     : '<p class="text-muted text-sm">Brak historii obecności.</p>';
 
+  const statsHtml = [
+    ['Pracował', stats.przepracowaneDni],
+    ['Chory', stats.dniChorobowe],
+    ['Urlop', stats.dniUrlopu],
+    ['Nieobecny', stats.dniNieobecne],
+    ['Na tkalni', stats.tkalnia],
+    ['Na snowalni', stats.snowalnia],
+    ['Na klejarni', stats.klejarnia],
+    ['Na przewlekalni', stats.przewlekalnia],
+    ['Zmiana 1', stats.zmiana1],
+    ['Zmiana 2', stats.zmiana2],
+  ].map(([label, value]) => `
+    <div class="info-item">
+      <div class="lbl">${label}</div>
+      <div class="val">${value}</div>
+    </div>`).join('');
+
   showModal(`
     <button class="modal-close-btn" onclick="closeModal()">×</button>
     <h3>${escHtml(p.imie)} ${escHtml(p.nazwisko)}</h3>
     <div class="info-grid mb-16">
       <div class="info-item"><div class="lbl">Stanowisko</div><div class="val">${stanowiskoLabel(p.stanowisko)}</div></div>
       <div class="info-item"><div class="lbl">Aktualna zmiana</div><div class="val">Zmiana ${zmiana}</div></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Statystyki pracownika</div>
+      <div class="info-grid">${statsHtml}</div>
     </div>
     <div class="detail-section">
       <div class="detail-section-title">Planowane nieobecności</div>

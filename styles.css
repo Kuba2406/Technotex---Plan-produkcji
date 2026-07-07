@@ -171,6 +171,15 @@ body {
 .badge-purple  { background: #ede9fe; color: #3b0764; }
 .badge-teal    { background: #ccfbf1; color: #134e4a; }
 
+.color-chip {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
 /* ---- Status lamp ---- */
 .status-lamp {
   width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex-shrink: 0;
@@ -261,6 +270,7 @@ body {
 }
 
 .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+.form-control[readonly] { background: #f8fafc; color: var(--text-muted); }
 
 /* ---- Toggle switch ---- */
 .toggle-wrap { display: flex; align-items: center; gap: 8px; }
