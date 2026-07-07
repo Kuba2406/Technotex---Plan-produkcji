@@ -148,9 +148,30 @@ function splitSummary(item) {
 // ============================================================
 const modalOverlay = qs('#modal-overlay');
 const modalContent = qs('#modal-content');
+
+function sanitizeModalHtml(html) {
+  const template = document.createElement('template');
+  template.innerHTML = String(html || '');
+  template.content.querySelectorAll('script, iframe, object, embed').forEach(node => node.remove());
+  template.content.querySelectorAll('*').forEach((el) => {
+    [...el.attributes].forEach((attr) => {
+      const name = attr.name.toLowerCase();
+      const value = String(attr.value || '').trim().toLowerCase();
+      if (name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+        return;
+      }
+      if ((name === 'href' || name === 'src') && value.startsWith('javascript:')) {
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+  return template.innerHTML;
+}
+
 const modalHtmlPolicy = window.trustedTypes
-  ? window.trustedTypes.createPolicy('technotex-modal', { createHTML: input => input })
-  : { createHTML: input => input };
+  ? window.trustedTypes.createPolicy('technotex-modal', { createHTML: input => sanitizeModalHtml(input) })
+  : { createHTML: input => sanitizeModalHtml(input) };
 
 function showModal(html, wide) {
   modalContent.innerHTML = modalHtmlPolicy.createHTML(`<div class="modal${wide ? ' modal-wide' : ''}">${html}</div>`);
@@ -2261,15 +2282,15 @@ window.addNieobecnosc = function(pracownikId) {
 
 window.saveNieobecnosc = function() {
   const od = qs('#fn-od').value;
-  const doDt = qs('#fn-do').value;
-  if (!od || !doDt) { alert('Podaj daty.'); return; }
-  if (od > doDt) { alert('Data "od" musi być przed datą "do".'); return; }
+  const doDate = qs('#fn-do').value;
+  if (!od || !doDate) { alert('Podaj daty.'); return; }
+  if (od > doDate) { alert('Data "od" musi być przed datą "do".'); return; }
   const id = state.nextId.nieobecnosc++;
   state.nieobecnosci.push({
     id,
     pracownikId: parseInt(qs('#fn-prac').value),
     typ: qs('#fn-typ').value,
-    od, do: doDt,
+    od, do: doDate,
   });
   closeModal(); renderView();
 };
