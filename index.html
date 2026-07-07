@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technotex – Plan produkcji</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ---- Sidebar navigation ---- -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Technotex</h1>
+        <p>Plan produkcji</p>
+      </div>
+      <nav class="nav">
+        <a class="nav-item" data-view="artykuly"      href="#artykuly">1. Artykuły</a>
+        <a class="nav-item" data-view="zlecenia"      href="#zlecenia">2. Zlecenia produkcyjne</a>
+        <a class="nav-item" data-view="snowalnia"     href="#snowalnia">3. Snowalnia</a>
+        <a class="nav-item" data-view="klejarnia"     href="#klejarnia">4. Klejarnia</a>
+        <a class="nav-item" data-view="magazyn"       href="#magazyn">5. Magazyn osnów</a>
+        <a class="nav-item" data-view="przewlekalnia" href="#przewlekalnia">6. Przewlekalnia</a>
+        <a class="nav-item" data-view="tkalnia"       href="#tkalnia">7. Tkalnia</a>
+        <a class="nav-item" data-view="obecnosci"     href="#obecnosci">8. Obecności</a>
+        <a class="nav-item" data-view="ustawienia"    href="#ustawienia">9. Ustawienia</a>
+      </nav>
+    </aside>
+
+    <!-- ---- Main content ---- -->
+    <main class="main-content" id="main-content">
+      <!-- Views are rendered here by app.js -->
+    </main>
+  </div>
+
+  <!-- ---- Modal overlay ---- -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal-content"></div>
+  </div>
+
+  <!-- Load data first, then app -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
