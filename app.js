@@ -58,8 +58,12 @@ function rozpinkaLabel(value) {
 }
 
 function priorytetLabel(value) {
-  if (!value) return 'Standard';
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  return {
+    niski: 'Niski',
+    standard: 'Standard',
+    wysoki: 'Wysoki',
+    krytyczny: 'Krytyczny',
+  }[value] || 'Standard';
 }
 
 function priorytetBadgeClass(value) {
@@ -86,13 +90,18 @@ const modalOverlay = qs('#modal-overlay');
 const modalContent = qs('#modal-content');
 
 function showModal(html, wide) {
-  modalContent.innerHTML = `<div class="modal${wide ? ' modal-wide' : ''}">${html}</div>`;
+  const wrapper = document.createElement('div');
+  wrapper.className = `modal${wide ? ' modal-wide' : ''}`;
+  const range = document.createRange();
+  range.selectNode(document.body);
+  wrapper.append(range.createContextualFragment(html));
+  modalContent.replaceChildren(wrapper);
   modalOverlay.classList.remove('hidden');
 }
 
 function closeModal() {
   modalOverlay.classList.add('hidden');
-  modalContent.innerHTML = '';
+  modalContent.replaceChildren();
 }
 
 function confirm(message, onYes, detail) {
@@ -141,7 +150,7 @@ function renderView() {
     snowalnia:     renderSnowalnioView,
     klejarnia:     renderKlejarnia,
     magazyn:       renderMagazyn,
-    przewlekalnia: renderPrzewekalnia,
+    przewlekalnia: renderPrzewlekalnia,
     tkalnia:       renderTkalnia,
     obecnosci:     renderObecnosci,
     ustawienia:    renderUstawienia,
@@ -833,7 +842,7 @@ window.magazynDoLoomConfirm = function(osnId) {
 // ============================================================
 // VIEW: PRZEWLEKALNIA
 // ============================================================
-function renderPrzewekalnia() {
+function renderPrzewlekalnia() {
   const inPrzew = state.osnowy.filter(o => o.lokalizacja === 'przewlekalnia');
 
   const sections = [
@@ -922,9 +931,9 @@ window.przewDoMagazynu = function(id) {
 
 window.przewDoKrosna = function(id) {
   const o = getOsnowa(id); if (!o) return;
-  const freeLoons = state.krosna.filter(k => k.osnowId === null);
-  if (!freeLoons.length) { alert('Brak wolnych krosien.'); return; }
-  const opts = freeLoons.map(k => `<option value="${k.id}">${escHtml(k.numer)}</option>`).join('');
+  const freeLooms = state.krosna.filter(k => k.osnowId === null);
+  if (!freeLooms.length) { alert('Brak wolnych krosien.'); return; }
+  const opts = freeLooms.map(k => `<option value="${k.id}">${escHtml(k.numer)}</option>`).join('');
   showModal(`
     <button class="modal-close-btn" onclick="closeModal()">×</button>
     <h3>Przypisz osnowę ${escHtml(o.numer)} do krosna</h3>
