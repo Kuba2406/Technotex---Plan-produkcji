@@ -150,10 +150,10 @@ const modalOverlay = qs('#modal-overlay');
 const modalContent = qs('#modal-content');
 
 function sanitizeModalHtml(html) {
-  const template = document.createElement('template');
-  template.innerHTML = String(html || '');
-  template.content.querySelectorAll('script, iframe, object, embed').forEach(node => node.remove());
-  template.content.querySelectorAll('*').forEach((el) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(String(html || ''), 'text/html');
+  doc.body.querySelectorAll('script, iframe, object, embed, link[rel="import"]').forEach(node => node.remove());
+  doc.body.querySelectorAll('*').forEach((el) => {
     [...el.attributes].forEach((attr) => {
       const name = attr.name.toLowerCase();
       const value = String(attr.value || '').trim().toLowerCase();
@@ -161,20 +161,18 @@ function sanitizeModalHtml(html) {
         el.removeAttribute(attr.name);
         return;
       }
-      if ((name === 'href' || name === 'src') && value.startsWith('javascript:')) {
+      if ((name === 'href' || name === 'src') && /^(javascript|data|vbscript):/.test(value)) {
         el.removeAttribute(attr.name);
       }
     });
   });
-  return template.innerHTML;
+  return doc.body;
 }
 
-const modalHtmlPolicy = window.trustedTypes
-  ? window.trustedTypes.createPolicy('technotex-modal', { createHTML: input => sanitizeModalHtml(input) })
-  : { createHTML: input => sanitizeModalHtml(input) };
-
 function showModal(html, wide) {
-  modalContent.innerHTML = modalHtmlPolicy.createHTML(`<div class="modal${wide ? ' modal-wide' : ''}">${html}</div>`);
+  const safeBody = sanitizeModalHtml(`<div class="modal${wide ? ' modal-wide' : ''}">${html}</div>`);
+  const nodes = [...safeBody.childNodes].map(node => document.importNode(node, true));
+  modalContent.replaceChildren(...nodes);
   modalOverlay.classList.remove('hidden');
 }
 
