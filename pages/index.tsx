@@ -54,8 +54,8 @@ const Home: NextPage = () => {
         asynchronously loads from the backend API.
         app.js renders the UI using that state.
       */}
-      <Script src="/data.js" strategy="beforeInteractive" />
-      <Script src="/app.js"  strategy="beforeInteractive" />
+        <Script src="/data.js" strategy="afterInteractive" />
+	<Script src="/app.js" strategy="afterInteractive" />
     </>
   );
 };
