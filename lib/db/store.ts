@@ -73,16 +73,15 @@ export async function getState(): Promise<AppState> {
     return stored ? stored : deepClone(initialData);
   }
 
-  if (backend === 'supabase') {
-    // Supabase implementation is in client.ts.
-    // For now, fall back to memory while Supabase credentials are not set.
-    const { getSupabaseState } = await import('./client');
-    try {
-      return await getSupabaseState();
-    } catch {
-      console.warn('[store] Supabase unavailable, falling back to memory store');
-    }
+if (backend === 'supabase') {
+  const { getSupabaseState } = await import('./client');
+  try {
+    return await getSupabaseState();
+  } catch (err) {
+    console.error('[store] Supabase read failed:', err);
+    console.warn('[store] Supabase unavailable, falling back to memory store');
   }
+}
 
   // Default: in-memory
   if (!memoryStore) {
@@ -98,19 +97,15 @@ export async function getState(): Promise<AppState> {
 export async function saveState(state: AppState): Promise<AppState> {
   const backend = process.env.STORAGE_BACKEND ?? 'memory';
 
-  if (backend === 'file') {
-    saveToFile(state);
-    return state;
+if (backend === 'supabase') {
+  const { saveSupabaseState } = await import('./client');
+  try {
+    return await saveSupabaseState(state);
+  } catch (err) {
+    console.error('[store] Supabase save failed:', err);
+    console.warn('[store] Supabase save failed, writing to memory as fallback');
   }
-
-  if (backend === 'supabase') {
-    const { saveSupabaseState } = await import('./client');
-    try {
-      return await saveSupabaseState(state);
-    } catch {
-      console.warn('[store] Supabase save failed, writing to memory as fallback');
-    }
-  }
+}
 
   // Default: in-memory
   memoryStore = deepClone(state);
