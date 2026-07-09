@@ -24,7 +24,10 @@ yarn-error.log*
 
 # Local env files
 .env.local
+<<<<<<< HEAD
 .env.local.txt
+=======
+>>>>>>> copilot/build-first-backend-for-frontend
 .env.development.local
 .env.test.local
 .env.production.local
