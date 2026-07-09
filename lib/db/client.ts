@@ -12,6 +12,7 @@
 // ============================================================
 
 import type { AppState } from '../../types/domain';
+import { initialData } from '../../seed/initial-data';
 
 // Lazy-load the Supabase client so the app works without credentials
 let _client: import('@supabase/supabase-js').SupabaseClient | null = null;
@@ -24,7 +25,7 @@ function getClient() {
     if (!url || !key) {
       throw new Error(
         'Supabase credentials not configured. ' +
-        'Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'
+          'Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local',
       );
     }
 
@@ -36,15 +37,12 @@ function getClient() {
 }
 
 // ---- Table names ----
-// The single-table approach stores the whole state as a JSON blob.
-// This is intentionally simple for MVP v1.
-// In a future iteration, each entity type can have its own table.
 const STATE_TABLE = 'app_state';
 const STATE_ROW_ID = 1;
 
 /**
  * Load application state from Supabase.
- * Falls back to returning null if no row exists.
+ * If no row exists yet, return initial seed data.
  */
 export async function getSupabaseState(): Promise<AppState> {
   const supabase = getClient();
@@ -52,10 +50,14 @@ export async function getSupabaseState(): Promise<AppState> {
     .from(STATE_TABLE)
     .select('payload')
     .eq('id', STATE_ROW_ID)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
-    throw new Error(`Supabase read error: ${error?.message ?? 'no data'}`);
+  if (error) {
+    throw new Error(`Supabase read error: ${error.message}`);
+  }
+
+  if (!data) {
+    return initialData;
   }
 
   return data.payload as AppState;
